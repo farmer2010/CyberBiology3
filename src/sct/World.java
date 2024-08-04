@@ -85,6 +85,10 @@ public class World extends JPanel{
         color_button.addActionListener(new dr2());
 		color_button.setBounds(W - 300, 240, 125, 20);
         add(color_button);
+        JButton genes_button = new JButton("Genes");
+        genes_button.addActionListener(new dr6());
+        genes_button.setBounds(W - 170, 240, 125, 20);
+        add(genes_button);
         JButton select_button = new JButton("Select");
         select_button.addActionListener(new select());
 		select_button.setBounds(W - 300, 455, 95, 20);
@@ -163,7 +167,7 @@ public class World extends JPanel{
 		canvas.setColor(black);
 		canvas.setFont(new Font("arial", Font.BOLD, 18));
 		canvas.drawString("Main: ", W - 300, 20);
-		canvas.drawString("version 1.0", W - 300, 40);
+		canvas.drawString("version 2.2", W - 300, 40);
 		canvas.drawString("steps: " + String.valueOf(steps), W - 300, 60);
 		canvas.drawString("objects: " + String.valueOf(obj_count) + ", bots: " + String.valueOf(b_count), W - 300, 80);
 		if (draw_type == 0) {
@@ -197,7 +201,7 @@ public class World extends JPanel{
 		canvas.drawString("Controls:", W - 300, 580);
 		if (selection != null) {
 			canvas.drawString("energy: " + String.valueOf(selection.energy) + ", minerals: " + String.valueOf(selection.minerals), W - 300, 295);
-			canvas.drawString("age: " + String.valueOf(selection.age), W - 300, 315);
+			canvas.drawString("age: " + String.valueOf(selection.age) + ", [" + String.valueOf(selection.genes[0]) + String.valueOf(selection.genes[1]) + String.valueOf(selection.genes[2]) + String.valueOf(selection.genes[3]) + "]", W - 300, 315);
 			canvas.drawString("position: " + "[" + String.valueOf(selection.xpos) + ", " + String.valueOf(selection.ypos) + "]", W - 300, 335);
 			canvas.drawString("color: " + "(" + String.valueOf(selection.color.getRed()) + ", " + String.valueOf(selection.color.getGreen()) + ", " + String.valueOf(selection.color.getBlue()) + ")", W - 300, 355);
 			canvas.setColor(new Color(90, 90, 90, 90));
@@ -211,12 +215,12 @@ public class World extends JPanel{
 			canvas.setColor(new Color(90, 90, 90));
 			canvas.fillRect(0, 0, 360, 360);
 			canvas.setColor(new Color(128, 128, 128));
-			for (int x = 0; x < 5; x++) {
-				for (int y = 0; y < 6; y++) {
+			for (int x = 0; x < 8; x++) {
+				for (int y = 0; y < 8; y++) {
 					canvas.setColor(new Color(128, 128, 128));
 					canvas.fillRect(x * 45, y * 45, 40, 40);
 					canvas.setColor(new Color(0, 0, 0));
-					canvas.drawString(String.valueOf(selection.commands[x][y]), x * 45 + 20, y * 45 + 20);
+					canvas.drawString(String.valueOf(selection.commands[x + y * 8]), x * 45 + 20, y * 45 + 20);
 				}
 			}
 		}
@@ -413,6 +417,11 @@ public class World extends JPanel{
 	private class dr5 implements ActionListener{
 		public void actionPerformed(ActionEvent e) {
 			draw_type = 4;
+		}
+	}
+	private class dr6 implements ActionListener{
+		public void actionPerformed(ActionEvent e) {
+			draw_type = 5;
 		}
 	}
 	private class start_stop implements ActionListener{
