@@ -4,6 +4,7 @@ from random import randint as rand
 import image_factory
 import pygame
 from game_object import GameObject
+from condition import condition
 pygame.init()
 
 class Bot(GameObject):
@@ -17,20 +18,21 @@ class Bot(GameObject):
         self.age = 1000#возраст (больше = бот молодой)
         self.world = world#ссылка на массив с миром
         self.objects = objects#ссылка на массив с ботами
-        self.commands = [[rand(0, 8) for y in range(6)]for x in range(5)]#мозг бота
+        self.commands = [[[rand(0, 19), rand(0, 19), rand(0, 63), rand(0, 63), rand(0, 63), rand(0, 45), rand(0, 63)] for y in range(6)]for x in range(5)]#мозг бота
         self.minerals = 0
         self.attack_count = 0#красный в режиме отбражения типа питания
         self.photo_count = 0#зеленый в режиме отбражения типа питания
         self.minerals_count = 0#синий в режиме отбражения типа питания
         self.bots = bots#оличество ботов(для отображения на экране)
         self.attacked = 0#бот был атакован
+        self.variable = 0#память
         self.photo_list = [#массивы с приходом фотосинтеза и минералов в зависимости от уровня
             10,
             8,
             6,
             4,
             3,
-            1
+            2
             ]
         self.minerals_list = [
             1,
@@ -106,7 +108,7 @@ class Bot(GameObject):
                     new_color = self.color
                     if rand(0, 3) == 0:#мутация с шансом 1/4
                         #мутация потомка
-                        new_commands[rand(0, 4)][rand(0, 5)] = rand(0, 8)#мутация мозга
+                        self.mutate_command(new_commands[rand(0, 4)][rand(0, 5)])#мутация мозга
                         new_color = (
                             rand(0, 255),
                             rand(0, 255),
@@ -162,6 +164,32 @@ class Bot(GameObject):
             self.energy -= int(self.energy / 4)
             self.minerals -= int(self.minerals / 4)
 
+    def mutate_command(self, command):
+        ind = rand(0, 6)
+        if ind <= 1:
+            command[ind] = rand(0, 19)
+        elif ind == 5:
+            command[ind] = rand(0, 45)
+        else:
+            command[ind] = rand(0, 63)
+
+    def give2(self, pos):#равномерное распределение ресурсов
+        #поиск друга
+        friend = None
+        for friend in self.objects:
+            if friend.pos == pos and friend.name == "bot":
+                break
+            else:
+                friend = None
+        if friend != None:
+            #равномерное распределение минералов и энергии
+            enr = friend.energy + self.energy
+            mnr = friend.minerals + self.minerals
+            friend.energy = int(enr / 2)
+            friend.minerals = int(mnr / 2)
+            self.energy = int(enr / 2)
+            self.minerals = int(mnr / 2)
+
     def update_commands(self, draw_type):
         x = self.sensor(self.world, self.rotate) - 1#столбец в мозге(то что перед ботом)
         check = [#список раздражителей
@@ -176,35 +204,75 @@ class Bot(GameObject):
         for y in range(len(check)):#поиск первого сработавшего раздражителя
             if check[y] == 1:
                 break
-        command = self.commands[x][y]#команда на перекрестии сработавших столбца и строки
-        if command == 0:#ничего не делать(спорная команда, думаю удалить в последующих версиях)
-            pass
+        cmd = self.commands[x][y]
+        if condition(self, [cmd[5], cmd[6]]):
+            command = cmd[0]
+        else:
+            command = cmd[1]
+        if command == 0 or command == 12:#фотосинтез
+            sector = self.bot_in_sector()
+            if sector <= 5:
+                self.photo_count += 1
+                self.energy += self.photo_list[sector]
         elif command == 1:#повернуть налево
             self.rotate -= 1
             self.rotate %= 8
         elif command == 2:#повернуть направо
             self.rotate += 1
             self.rotate %= 8
-        elif command == 3:#походить
+        elif command == 3 or command == 13:#походить
             self.move(self.world)
-        elif command == 4:#атаковать
+        elif command == 4 or command == 14:#атаковать
             self.attack(self.get_rotate_position(self.rotate))
-        elif command == 5:#поделиться
+        elif command == 5 or command == 15:#поделиться
             self.multiply(draw_type, self.rotate)
-        elif command == 6:#заниматься фотосинтезом
-            sector = self.bot_in_sector()
-            if sector <= 5:
-                self.photo_count += 1
-                self.energy += self.photo_list[sector]
-        elif command == 7:#преобразовать минералы в энергию
-            if self.minerals > 0:
+        elif command == 6 or command == 16:#преобразовать минералы в энергию
+            if self.minerals != 0:
                 self.minerals_count += 1
-                self.energy += self.minerals * 4
-                self.minerals = 0
-        elif command == 8:#отдать соседу часть своих ресурсов
+            mnr = 50#трата минералов
+            if self.minerals < 50:
+                mnr = self.minerals
+            self.minerals -= mnr
+            self.energy += mnr * 2
+        elif command == 7:#генная атака
+            #поиск друга
+            friend = None
+            for friend in self.objects:
+                if friend.pos == self.get_rotate_position(self.rotate) and friend.name == "bot":
+                    break
+                else:
+                    friend = None
+            if friend != None:
+                self.mutate_command(friend.commands[rand(0, 4)][rand(0, 5)])
+        elif command == 8 or command == 17:#отдать соседу часть своих ресурсов
             self.give(self.get_rotate_position(self.rotate))
-        elif command > 8:#неиспользуемые команды(поворачивают бота в определенное направление)
-            self.rotate = command - 9
+        elif command == 9 or command == 18:#равномерное распределение ресурсов
+            self.give2(self.get_rotate_position(self.rotate))
+        elif command == 10:#записать значение в память
+            if cmd[2] % 4 == 0:#значение аргумента
+                self.variable = cmd[3]
+            elif cmd[2] % 9 == 1:#то, что перед ботом
+                self.variable = x * 15
+            elif cmd[2] % 9 == 2:#отнять значение аргумента
+                self.variable -= cmd[3]
+                self.variable %= 64
+            elif cmd[2] % 9 == 3:#прибавить значение аргумента
+                self.variable += cmd[3]
+                self.variable %= 64
+            elif cmd[2] % 9 == 4:#возраст
+                self.variable = int(self.age / 1000 * 63)
+            elif cmd[2] % 9 == 5:#минералы
+                self.variable = int(self.minerals / 1000 * 63)
+            elif cmd[2] % 9 == 6:#энергия
+                self.variable = int(self.energy / 1000 * 63)
+            elif cmd[2] % 9 == 7:#xpos
+                self.variable = int(self.pos[0] / self.world_scale[0] * 63)
+            elif cmd[2] % 9 == 8:#ypos
+                self.variable = int(self.pos[1] / self.world_scale[1] * 63)
+        elif command == 11:#установить направление в
+            self.rotate = cmd[2] % 8
+        elif command == 19:#мутация
+            self.mutate_command(self.commands[rand(0, 4)][rand(0, 5)])
 
     def update(self, draw_type):
         self.bots[0] += 1#величить счетчик ботов на один
