@@ -72,13 +72,13 @@ public class Bot{
 		map = new_map;
 		for (int drx = 0; drx < 5; drx++) {
 			for (int dry = 0; dry < 15; dry++) {
-				commands[drx][dry][0] = rand.nextInt(25);
-				commands[drx][dry][1] = rand.nextInt(25);
+				commands[drx][dry][0] = rand.nextInt(30);
+				commands[drx][dry][1] = rand.nextInt(30);
 				commands[drx][dry][2] = rand.nextInt(64);
 				commands[drx][dry][3] = rand.nextInt(64);
 				commands[drx][dry][4] = rand.nextInt(64);
 				commands[drx][dry][5] = rand.nextInt(64);
-				commands[drx][dry][6] = rand.nextInt(46);
+				commands[drx][dry][6] = rand.nextInt(58);
 				commands[drx][dry][7] = rand.nextInt(64);
 			}
 		}
@@ -291,6 +291,17 @@ public class Bot{
 			give2((rotate + param1) % 8);
 		}else if (command == 24) {//равномерное распределение ресурсов относительно
 			give((rotate + param1) % 8);
+		}else if (command == 25) {//походить в направлении
+			move(param1 % 8);
+			energy--;
+		}else if (command == 26) {//атаковать в направлении
+			attack(param1 % 8);
+		}else if (command == 27) {//поделиться в направлении
+			multiply(param1 % 8, iterator);
+		}else if (command == 28) {//отдать часть ресурсов в направлении
+			give2(param1 % 8);
+		}else if (command == 29) {//равномерное распределение ресурсов в направлении
+			give(param1 % 8);
 		}
 		if (dry >= 5) {
 			index++;
@@ -507,16 +518,16 @@ public class Bot{
 	public void mutate_command(int[] command) {
 		int ind = rand.nextInt(8);
 		if (ind <= 1) {
-			command[ind] = rand.nextInt(25);
+			command[ind] = rand.nextInt(30);
 		}else if (ind == 6) {
-			command[ind] = rand.nextInt(46);
+			command[ind] = rand.nextInt(58);
 		}else {
 			command[ind] = rand.nextInt(64);
 		}
 	}
 	public boolean condition(int[] command) {
 		int cmd = command[0];
-		if (cmd > 22) {
+		if (cmd > 28) {
 			return(true);
 		}else {
 			if (cmd == 0) {//есть ли фотосинтез
@@ -565,6 +576,18 @@ public class Bot{
 				return((int)(age / 1000.0 * 63) > command[1]);
 			}else if (cmd == 22) {//возраст меньше параметра
 				return((int)(age / 1000.0 * 63) < command[1]);
+			}else if (cmd == 23) {//возраст больше памяти
+				return((int)(age / 1000.0 * 63) > memory);
+			}else if (cmd == 24) {//энергия больше памяти
+				return((int)(energy / 1000.0 * 63) > memory);
+			}else if (cmd == 25) {//минералы больше памяти
+				return((int)(minerals / 1000.0 * 63) > memory);
+			}else if (cmd == 26) {//x позиция больше памяти
+				return((int)(xpos * 1.0 / world_scale[0] * 63) > memory);
+			}else if (cmd == 27) {//y позиция больше памяти
+				return((int)(ypos * 1.0 / world_scale[1] * 63) > memory);
+			}else if (cmd == 28) {//направление больше памяти
+				return((int)(rotate * 8) > memory);
 			}
 			return(false);
 		}
