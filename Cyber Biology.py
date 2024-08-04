@@ -24,7 +24,7 @@ H = pygame.display.Info().current_h
 #W = 900#для отладки
 #H = 900
 screen = pygame.display.set_mode([W, H])
-description = "Cyber Biology 3 v2.1"
+description = "Cyber Biology 3 v2.2"
 pygame.display.set_caption(description)
 objects = pygame.sprite.Group()
 world_scale = [
@@ -203,6 +203,13 @@ while keep_going:#основной цикл
             render_text("Minerals: " + str(selection.minerals), (W - 300, 440))
             render_text("Age: " + str(selection.age), (W - 300, 460))
             render_text("Position: " + str(selection.pos), (W - 300, 480))
+            render_text("Genes: ", (W - 300, 500))
+            for i in range(len(selection.genes)):
+                pygame.draw.rect(screen, (0, 0, 0), (W - 240 + 20 * i, 500, 15, 15))
+                if selection.genes[i] == 1:
+                    pygame.draw.rect(screen, (0, 255, 0), (W - 240 + 20 * i + 2, 502, 11, 11))
+                else:
+                    pygame.draw.rect(screen, (255, 0, 0), (W - 240 + 20 * i + 2, 502, 11, 11))
             if world[selection.pos[0]][selection.pos[1]] != "bot":
                 buttons.remove_bot_buttons()
                 selection = None
@@ -217,7 +224,7 @@ while keep_going:#основной цикл
                 win_img3.paste(organics_img, (obj.pos[0] * 10, obj.pos[1] * 10))
                 win_img4.paste(organics_img, (obj.pos[0] * 10, obj.pos[1] * 10))
             else:
-                bot_img = Image.new('RGB', (8, 8), obj.color)
+                bot_img = Image.new('RGB', (8, 8), (0, 128 * obj.genes[0] + 127 * obj.genes[1], 128 * obj.genes[2] + 127 * obj.genes[3]))
                 g = 255 - int((obj.energy / 1000) * 255)
                 if g < 0:
                     g = 0

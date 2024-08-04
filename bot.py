@@ -18,7 +18,7 @@ class Bot(GameObject):
         self.age = 1000#возраст (больше = бот молодой)
         self.world = world#ссылка на массив с миром
         self.objects = objects#ссылка на массив с ботами
-        self.commands = [[[rand(0, 19), rand(0, 19), rand(0, 63), rand(0, 63), rand(0, 63), rand(0, 45), rand(0, 63)] for y in range(15)]for x in range(5)]#мозг бота
+        self.commands = [[[rand(0, 24), rand(0, 24), rand(0, 63), rand(0, 63), rand(0, 63), rand(0, 45), rand(0, 63)] for y in range(15)]for x in range(5)]#мозг бота
         self.minerals = 0
         self.attack_count = 0#красный в режиме отбражения типа питания
         self.photo_count = 0#зеленый в режиме отбражения типа питания
@@ -26,6 +26,12 @@ class Bot(GameObject):
         self.bots = bots#оличество ботов(для отображения на экране)
         self.attacked = 0#бот был атакован
         self.variable = 0#память
+        self.genes = [#боты могут отключать некоторые сенсоры
+            rand(0, 1),
+            rand(0, 1),
+            rand(0, 1),
+            rand(0, 1)
+        ]
         self.photo_list = [#массивы с приходом фотосинтеза и минералов в зависимости от уровня
             10,
             8,
@@ -105,6 +111,7 @@ class Bot(GameObject):
                 else:#если энергии хватает
                     new_bot = Bot(pos2, self.color, self.world, self.objects, self.bots, energy=int(self.energy * 0.5), draw_type=draw_type)#создать нового бота
                     #настройка данных, изменяющихся при мутации
+                    new_genes = self.genes.copy()
                     new_commands = copy.deepcopy(self.commands)
                     new_color = self.color
                     if rand(0, 3) == 0:#мутация с шансом 1/4
@@ -115,8 +122,11 @@ class Bot(GameObject):
                             rand(0, 255),
                             rand(0, 255)
                         )
+                        i = rand(0, 3)
+                        new_genes[i] = not new_genes[i]#один из генов инвертируется
                     new_bot.color = new_color#задать потомку цвет
                     new_bot.commands = new_commands#дать потомку мозг
+                    new_bot.genes = new_genes#дать потомку гены
                     #минералы и энергия распределяются равномерно между потомком и предком
                     new_bot.minerals = int(self.minerals / 2)
                     self.minerals = int(self.minerals / 2)
@@ -168,7 +178,7 @@ class Bot(GameObject):
     def mutate_command(self, command):
         ind = rand(0, 6)
         if ind <= 1:
-            command[ind] = rand(0, 19)
+            command[ind] = rand(0, 24)
         elif ind == 5:
             command[ind] = rand(0, 45)
         else:
@@ -195,10 +205,10 @@ class Bot(GameObject):
         x = self.sensor(self.world, self.rotate) - 1#столбец в мозге(то что перед ботом)
         check = [#список раздражителей
             self.attacked,#бот атакован
-            self.energy < 100,#мало энергии
-            self.age < 100,#бот старый
-            self.energy > 900,#много энергии
-            self.age > 900,#бот молодой
+            (self.energy < 100) * self.genes[0],#мало энергии
+            (self.age < 100) * self.genes[1],#бот старый
+            (self.energy > 900) * self.genes[2],#много энергии
+            (self.age > 900) * self.genes[3],#бот молодой
             1#срабатывает, если все остальные не сработали
             ]
         y = 0#строка в мозге(первый сработавший раздражитель)
@@ -218,13 +228,14 @@ class Bot(GameObject):
                 self.photo_count += 1
                 self.energy += self.photo_list[sector]
         elif command == 1:#повернуть налево
-            self.rotate -= 1
+            self.rotate -= cmd[2]
             self.rotate %= 8
         elif command == 2:#повернуть направо
-            self.rotate += 1
+            self.rotate += cmd[2]
             self.rotate %= 8
         elif command == 3 or command == 13:#походить
             self.move(self.world)
+            self.energy -= 1
         elif command == 4 or command == 14:#атаковать
             self.attack(self.get_rotate_position(self.rotate))
         elif command == 5 or command == 15:#поделиться
@@ -276,9 +287,25 @@ class Bot(GameObject):
             self.rotate = cmd[2] % 8
         elif command == 19:#мутация
             self.mutate_command(self.commands[rand(0, 4)][rand(0, 5)])
+        elif command == 20:#относительное перемещение
+            rot = self.rotate
+            self.rotate += cmd[2]
+            self.rotate %= 8
+            self.move(self.world)
+            self.energy -= 1
+            self.rotate = rot
+        elif command == 21:#относительная атака
+            self.attack(self.get_rotate_position((self.rotate + cmd[2]) % 8))
+        elif command == 22:#относительное деление
+            self.multiply(draw_type, (self.rotate + cmd[2]) % 8)
+        elif command == 23:#относительное равномерное распределение ресурсов
+            self.give2(self.get_rotate_position((self.rotate + cmd[2]) % 8))
+        elif command == 24:#отдать соседу часть ресурсов относительно
+            self.give(self.get_rotate_position((self.rotate + cmd[2]) % 8))
         if y >= 5:
             self.index += 1
             self.index %= 10
+            
 
     def update(self, draw_type):
         self.bots[0] += 1#величить счетчик ботов на один
