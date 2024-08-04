@@ -22,7 +22,7 @@ class Bot(GameObject):
         self.attack_count = 0#красный в режиме отбражения типа питания
         self.photo_count = 0#зеленый в режиме отбражения типа питания
         self.minerals_count = 0#синий в режиме отбражения типа питания
-        self.bots = bots#количество ботов(для отображения на экране)
+        self.bots = bots#оличество ботов(для отображения на экране)
         self.attacked = 0#бот был атакован
         self.photo_list = [#массивы с приходом фотосинтеза и минералов в зависимости от уровня
             10,
@@ -59,7 +59,7 @@ class Bot(GameObject):
                 self.image = image_factory.get_image((255, g, 0))
             except:
                 print(g)
-        elif draw_type == 2:#режим отображения минералов
+        elif draw_type == 2:#ежим отображения минералов
             rg = 255 - int((self.minerals / 1000) * 255)
             if rg < 0:
                 rg = 0
@@ -207,7 +207,7 @@ class Bot(GameObject):
             self.rotate = command - 9
 
     def update(self, draw_type):
-        self.bots[0] += 1#увеличить счетчик ботов на один
+        self.bots[0] += 1#величить счетчик ботов на один
         if not self.killed:#если бот не мертв:
             self.world[self.pos[0]][self.pos[1]] = "bot"
             self.age -= 1#постареть
@@ -228,7 +228,7 @@ class Bot(GameObject):
                 self.objects.add(organics.Organics(self.pos, self.world, self.objects, self.energy))
                 self.killed = 1
                 self.kill()
-            if self.energy <= 0:#умереть от недостатка энергии(органика не появляется)
+            if self.energy <= 0:#мереть от недостатка энергии(органика не появляется)
                 self.world[self.pos[0]][self.pos[1]] = "none"
                 self.killed = 1
                 self.kill()

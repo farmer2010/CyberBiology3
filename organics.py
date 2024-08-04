@@ -6,7 +6,7 @@ pygame.init()
 class Organics(GameObject):
     def __init__(self, pos, world, objects, energy=0):
         GameObject.__init__(self, pos, image_factory.get_organics_image())
-        self.name = "organics"#имя
+        self.name = "organics"#
         self.rotate = 4#направление(можно изменить, тогда органика будет лететь в другое место)
         self.energy = energy#энергия
         self.world = world#ссылка на массив с миром
