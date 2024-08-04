@@ -18,7 +18,7 @@ class Bot(GameObject):
         self.age = 1000#возраст (больше = бот молодой)
         self.world = world#ссылка на массив с миром
         self.objects = objects#ссылка на массив с ботами
-        self.commands = [[[rand(0, 19), rand(0, 19), rand(0, 63), rand(0, 63), rand(0, 63), rand(0, 45), rand(0, 63)] for y in range(6)]for x in range(5)]#мозг бота
+        self.commands = [[[rand(0, 19), rand(0, 19), rand(0, 63), rand(0, 63), rand(0, 63), rand(0, 45), rand(0, 63)] for y in range(15)]for x in range(5)]#мозг бота
         self.minerals = 0
         self.attack_count = 0#красный в режиме отбражения типа питания
         self.photo_count = 0#зеленый в режиме отбражения типа питания
@@ -41,6 +41,7 @@ class Bot(GameObject):
             ]
         self.last_draw_type = [0]
         self.change_image(draw_type)
+        self.index = 0
 
     def bot_in_sector(self):#для фотосинтеза и минералов
         sector_len = int(self.world_scale[1] / 8)
@@ -108,7 +109,7 @@ class Bot(GameObject):
                     new_color = self.color
                     if rand(0, 3) == 0:#мутация с шансом 1/4
                         #мутация потомка
-                        self.mutate_command(new_commands[rand(0, 4)][rand(0, 5)])#мутация мозга
+                        self.mutate_command(new_commands[rand(0, 4)][rand(0, 14)])#мутация мозга
                         new_color = (
                             rand(0, 255),
                             rand(0, 255),
@@ -204,6 +205,8 @@ class Bot(GameObject):
         for y in range(len(check)):#поиск первого сработавшего раздражителя
             if check[y] == 1:
                 break
+        if y == 5:
+            y = 5 + self.index
         cmd = self.commands[x][y]
         if condition(self, [cmd[5], cmd[6]]):
             command = cmd[0]
@@ -273,6 +276,9 @@ class Bot(GameObject):
             self.rotate = cmd[2] % 8
         elif command == 19:#мутация
             self.mutate_command(self.commands[rand(0, 4)][rand(0, 5)])
+        if y >= 5:
+            self.index += 1
+            self.index %= 10
 
     def update(self, draw_type):
         self.bots[0] += 1#величить счетчик ботов на один
