@@ -18,7 +18,7 @@ public class Bot{
 	public int minerals;
 	public int killed = 0;
 	public int[][] map;
-	public int[][][] commands = new int[5][15][7];
+	public int[][][] commands = new int[5][15][8];
 	private int index = 0;
 	public int age = 1000;
 	public int state = 0;//бот или органика
@@ -77,8 +77,9 @@ public class Bot{
 				commands[drx][dry][2] = rand.nextInt(64);
 				commands[drx][dry][3] = rand.nextInt(64);
 				commands[drx][dry][4] = rand.nextInt(64);
-				commands[drx][dry][5] = rand.nextInt(46);
-				commands[drx][dry][6] = rand.nextInt(64);
+				commands[drx][dry][5] = rand.nextInt(64);
+				commands[drx][dry][6] = rand.nextInt(46);
+				commands[drx][dry][7] = rand.nextInt(64);
 			}
 		}
 		//world_scale[0] = map.length;
@@ -200,36 +201,42 @@ public class Bot{
 		}
 		int drx = see(rotate);
 		int[] cmd = commands[drx][dry];
-		int[] n = {cmd[5], cmd[6]};
+		int[] n = {cmd[6], cmd[7]};
 		int command;
+		int param1;
+		int param2;
 		if (condition(n)) {
 			command = cmd[0];
+			param1 = cmd[2];
+			param2 = cmd[3];
 		}else {
 			command = cmd[1];
+			param1 = cmd[4];
+			param2 = cmd[5];
 		}
-		if (command == 0 || command == 12) {
+		if (command == 0 || command == 12) {//фотосинтез
 			if (bot_in_sector() <= 5) {
 				energy += photo_list[bot_in_sector()];
 				c_green++;
 			}
-		}else if (command == 1) {
+		}else if (command == 1) {//повернуть направо
 			rotate += 1;
 			if (rotate > 7) {
 				rotate = 0;
 			}
-		}else if (command == 2) {
+		}else if (command == 2) {//повенуть налево
 			rotate -= 1;
 			if (rotate < 0) {
 				rotate = 7;
 			}
-		}else if (command == 3 || command == 13) {
+		}else if (command == 3 || command == 13) {//походить
 			move(rotate);
 			energy--;
-		}else if (command == 4 || command == 14) {
+		}else if (command == 4 || command == 14) {//атаковать
 			attack(rotate);
-		}else if (command == 5 || command == 15) {
+		}else if (command == 5 || command == 15) {//поделиться
 			multiply(rotate, iterator);
-		}else if (command == 6 || command == 16) {
+		}else if (command == 6 || command == 16) {//преобразовать минералы в энергию
 			if (minerals > 0) {
 				c_blue++;
 			}
@@ -239,50 +246,51 @@ public class Bot{
 			}
 			minerals -= mnr;
 			energy += mnr * 2;
-		}else if (command == 7) {
+		}else if (command == 7) {//мутировать соседа
 			mutate_neighbour(rotate);
-		}else if (command == 8 || command == 17) {
+		}else if (command == 8 || command == 17) {//отдать часть ресурсов
 			give(rotate);
-		}else if (command == 9 || command == 18) {
+		}else if (command == 9 || command == 18) {//равномерное распределение ресурсов
 			give2(rotate);
-		}else if (command == 10) {
-			if (cmd[2] % 9 == 0) {
-				memory = cmd[3];
-			}else if (cmd[2] % 9 == 1) {
+		}else if (command == 10) {//записать число в память
+			if (param1 % 9 == 0) {
+				memory = param2;
+			}else if (param1 % 9 == 1) {
 				memory = drx * 15;
-			}else if (cmd[2] % 9 == 2) {
-				memory -= cmd[3];
+			}else if (param1 % 9 == 2) {
+				memory -= param2;
 				if (memory < 0) {
 					memory = 0;
 				}
-			}else if (cmd[2] % 9 == 3) {
-				memory += cmd[3];
+			}else if (param1 % 9 == 3) {
+				memory += param2;
 				memory %= 64;
-			}else if (cmd[2] % 9 == 4) {
+			}else if (param1 % 9 == 4) {
 				memory = (int)(age / 1000.0 * 63);
-			}else if (cmd[2] % 9 == 5) {
+			}else if (param1 % 9 == 5) {
 				memory = (int)(minerals / 1000.0 * 63);
-			}else if (cmd[2] % 9 == 6) {
+			}else if (param1 % 9 == 6) {
 				memory = (int)(energy / 1000.0 * 63);
-			}else if (cmd[2] % 9 == 7) {
+			}else if (param1 % 9 == 7) {
 				memory = (int)(xpos * 1.0 / world_scale[0] * 63);
-			}else if (cmd[2] % 9 == 8) {
+			}else if (param1 % 9 == 8) {
 				memory = (int)(ypos * 1.0 / world_scale[1] * 63);
 			}
-		}else if (command == 11) {
-			rotate = cmd[2] % 8;
-		}else if (command == 19) {
+		}else if (command == 11) {//повернуть в направлении
+			rotate = param1 % 8;
+		}else if (command == 19) {//мутировать
 			mutate_command(commands[rand.nextInt(5)][rand.nextInt(15)]);
-		}else if (command == 20) {
-			move((rotate + cmd[2]) % 8);
-		}else if (command == 21) {
-			attack((rotate + cmd[2]) % 8);
-		}else if (command == 22) {
-			multiply((rotate + cmd[2]) % 8, iterator);
-		}else if (command == 23) {
-			give2((rotate + cmd[2]) % 8);
-		}else if (command == 24) {
-			give((rotate + cmd[2]) % 8);
+		}else if (command == 20) {//походить относительно
+			move((rotate + param1) % 8);
+			energy--;
+		}else if (command == 21) {//атаковать относительно
+			attack((rotate + param1) % 8);
+		}else if (command == 22) {//поделиться отноительно
+			multiply((rotate + param1) % 8, iterator);
+		}else if (command == 23) {//отдать часть ресурсов относительно
+			give2((rotate + param1) % 8);
+		}else if (command == 24) {//равномерное распределение ресурсов относительно
+			give((rotate + param1) % 8);
 		}
 		if (dry >= 5) {
 			index++;
@@ -383,7 +391,7 @@ public class Bot{
 		int errors = 0;
 		for (int drx = 0; drx < 5; drx++) {
 			for (int dry = 0; dry < 15; dry++) {
-				for (int drz = 0; drz < 7; drz++) {
+				for (int drz = 0; drz < 8; drz++) {
 					if (brain1[drx][dry][drz] != brain2[drx][dry][drz]) {
 						errors += 1;
 					}
@@ -436,10 +444,10 @@ public class Bot{
 					for (int i = 0; i < 4; i++) {
 						new_genes[i] = genes[i];
 					}
-					int[][][] new_brain = new int[5][15][7];
+					int[][][] new_brain = new int[5][15][8];
 					for (int drx = 0; drx < 5; drx++) {
 						for (int dry = 0; dry < 15; dry++) {
-							for (int drz = 0; drz < 7; drz++) {
+							for (int drz = 0; drz < 8; drz++) {
 								new_brain[drx][dry][drz] = commands[drx][dry][drz];
 							}
 						}
@@ -497,10 +505,10 @@ public class Bot{
 		return(rand.nextInt(2) == 1);
 	}
 	public void mutate_command(int[] command) {
-		int ind = rand.nextInt(7);
+		int ind = rand.nextInt(8);
 		if (ind <= 1) {
 			command[ind] = rand.nextInt(25);
-		}else if (ind == 5) {
+		}else if (ind == 6) {
 			command[ind] = rand.nextInt(46);
 		}else {
 			command[ind] = rand.nextInt(64);
